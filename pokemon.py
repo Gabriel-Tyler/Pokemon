@@ -101,15 +101,20 @@ leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense
 cut = Moves('Cut', 'normal', 'physical', 50, 95, 30)
 ember = Moves('Ember', 'fire', 'special', 40, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
 hydro_pump = Moves('Hydro Pump', 'water', 'special', 110, 80, 5)
+thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May paralyze opponent.')
+swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
+vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
+razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
+water_gun = Moves('Water Gun', 'water', 'special', 40, 100, 25)
+rapid_spin = Moves('Rapid Spin', 'normal', 'physical', 50, 100, 40)
 
 class Pokemon:
-    def __init__(self, name, level, type_, given_moveset, 
-    max_health, defence_stat, special_defence_stat, 
-    attack_stat, special_attack_stat, speed, 
-    status_effects, knocked_out=False):
+    def __init__(self, name, type_, level, given_moveset, 
+    max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed, 
+    knocked_out=False):
         self.name = name
-        self.level = level
         self.type = type_
+        self.level = level
         # a list is passed
         # Ex: given_moveset = [tackle, leer, cut, ember]
         self.moveset = {}
@@ -124,11 +129,11 @@ class Pokemon:
 
         self.max_health = max_health
         self.current_health = max_health
-        self.defence_stat = defence_stat
-        self.special_defence_stat = special_defence_stat
-
         self.attack_stat = attack_stat
+        self.defence_stat = defence_stat
         self.special_attack_stat = special_attack_stat
+        self.special_defence_stat = special_defence_stat
+        self.speed = speed
         
         # Add to this list: {effect: numofturns}
         self.status_effects = {}
@@ -182,6 +187,7 @@ class Pokemon:
             print('Pick a move: \n')
             # moveset = {i: [move, move.pp], ...}
             for move in range(1, 5):
+                # Add power and accuracy to options
                 print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
 
             try:
@@ -192,6 +198,14 @@ class Pokemon:
                 print('Please pick a valid move.')
                 continue
 
+        print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
+
+        if randrange(100) > move.accuracy:
+            time.sleep(1)
+            print(f'{self.name} missed!')
+            return
+
+        time.sleep(1)
         # Calculate modifiers:
         effectiveness = types[move.type[other_pokemon.type]]
         random_factor = random.randint(85, 100) * .01
@@ -220,8 +234,6 @@ class Pokemon:
         # Bring base damage and modifiers together with this formula (round to whole number):
         damage = round((level_calc * power * a_d / 50 + 2) * modifier)
 
-        print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
-
         # Time for attack to take place
         time.sleep(1)
         if effectiveness == 2:
@@ -233,3 +245,8 @@ class Pokemon:
 
         time.sleep(1)
         other_pokemon.lose_health(damage)
+
+pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
+charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
+bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
+squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
