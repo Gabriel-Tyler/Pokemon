@@ -128,8 +128,7 @@ class Pokemon:
 
     def health(self):
         # Print current_health
-        print(f'{self.name} now has {self.current_health}/{self.max_health} health.')
-
+        print(f'{self.name} now has {self.current_health}/{self.max_health} health.\n')
     def lose_health(self, damage):
         self.current_health -= damage
 
@@ -139,7 +138,6 @@ class Pokemon:
             self.knock_out()
         else:
             self.health()
-
     def gain_health(self, health):
         self.current_health += health
         # Ensure current_health doesn't exceed max_health
@@ -147,7 +145,6 @@ class Pokemon:
             self.current_health = self.max_health
 
         self.health()
-
     def knock_out(self):
         self.current_health = 0
         self.knocked_out = True
@@ -160,7 +157,6 @@ class Pokemon:
         self.knocked_out = False
 
         print(f'{self.name} has been revived and now has {self.current_health}/{self.max_health} health.')
-
     def max_revive(self):
         # Revive to max_health
         self.current_health = self.max_health
@@ -174,7 +170,7 @@ class Pokemon:
         while True:
             print('Pick a move: \n')
             # moveset = {i: [move, move.pp], ...}
-            for move in range(1, 5):
+            for move in self.moveset:
                 # Add power and accuracy to options
                 print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
 
@@ -200,7 +196,7 @@ class Pokemon:
         # Whether or not the move hits based on accuracy
         if random.randrange(100) > move.accuracy:
             time.sleep(1)
-            print(f'{self.name} missed!')
+            print(f'{self.name} missed!\n')
             return
 
         # Calculate modifiers:
@@ -249,12 +245,14 @@ class Pokemon:
 
     def other_trainer_damage(self, other_pokemon, random_move):
         # Input a random move from computer
-        move = move = self.moveset[random_move][0]
+        move = self.moveset[random_move][0]
         
+        print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
+
         # Whether or not the move hits based on accuracy
         if random.randrange(100) > move.accuracy:
             time.sleep(1)
-            print(f'{self.name} missed!')
+            print(f'{self.name} missed!\n')
             return
 
         # Calculate modifiers:
@@ -300,31 +298,40 @@ class Pokemon:
         time.sleep(1)
         other_pokemon.lose_health(damage)
         time.sleep(1)
-
     def other_trainer_attack(self, other_pokemon):
-        random_move = random.randint(1,4)
+        random_move = random.randint(1,len(self.moveset))
         self.other_trainer_damage(other_pokemon, random_move)
 
 class Trainer:
-    def __init__(self, pokemon, currently_active=0):
+    def __init__(self, name, pokemon, currently_active=0):
+        self.name = name
         # List of pokemon, up to six
         self.pokemon = pokemon[0:6]
         # Dictionary of items
         self.inventory = {
-            'Potions': 0, 
-            'Max Potion': 0, 
-            'Revives': 0, 
-            'Max Revives': 0 
+            'Potions': 1, 
+            'Max Potions': 1, 
+            'Revives': 1, 
+            'Max Revives': 1 
         }
         # currently active pokemon, represented by index in self.pokemon
         self.currently_active = currently_active
     
     def attack(self, other_trainer):
+        # Pokemon should level up after this method, changing level and all stats by a certain percent
         # Two trainers attack eachother
+        # Implement speed
+        # Check if pokemon is fainted, if all are fainted, the trainer blacks out and the game ends
         self.pokemon[self.currently_active].attack(other_trainer.pokemon[other_trainer.currently_active])
+        # Check if a pokemon had fainted, force a switch if so, or black out
         # Some sort of status effect check here
         other_trainer.pokemon[other_trainer.currently_active].other_trainer_attack(self.pokemon[self.currently_active])
-    
+        # Faint check
+
+    # Print each pokemon's health and whether they are fainted
+    # Allow a choice of which pokemon to heal/revive
+    # Only revive if fainted
+    # Can't heal if fainted
     def potion(self, pokemon):
         if self.inventory['Potions'] > 0:
             print(f'A potion has been used on {pokemon.name}.')
@@ -354,7 +361,18 @@ class Trainer:
         else:
             print('There are no Max Revives left...')
 
-    def add_potions(self, amount):
+    def add_potions(self, amount=1):
+        self.inventory['Potions'] += amount
+    def add_max_potions(self, amount=1):
+        self.inventory['Max Potions'] += amount
+    def add_revive(self, amount=1):
+        self.inventory['Revives'] += amount
+    def add_max_revive(self, amount=1):
+        self.inventory['Max Revives'] += amount
+
+    def switch_pokemon(self, pokemon):
+        pass
+    def next_pokemon(self):
         pass
 
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
@@ -368,13 +386,18 @@ vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
 razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
 water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
 rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
-
-pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
+# [tackle, cut, thunderbolt, swift]
+pikachu = Pokemon('Pikachu', 'electric', 1, [thunderbolt], 35, 55, 30, 50, 40, 90)
 charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
 
-ash = Trainer([pikachu, charmander], 0)
-misty = Trainer([bulbasaur, squirtle], 1)
+ash = Trainer('Ash', [pikachu, charmander], 0)
+misty = Trainer('Misty', [bulbasaur, squirtle], 1)
 # 'Mistys squirtle has been targeted by ashs pikachu...' code that in
-ash.attack(misty)
+# Print other pokemon's move
+while True:
+    misty.attack(ash)
+
+
+
