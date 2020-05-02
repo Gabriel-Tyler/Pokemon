@@ -105,13 +105,12 @@ thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May para
 swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
 vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
 razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
-water_gun = Moves('Water Gun', 'water', 'special', 40, 100, 25)
-rapid_spin = Moves('Rapid Spin', 'normal', 'physical', 50, 100, 40)
+water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
+rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
 
 class Pokemon:
     def __init__(self, name, type_, level, given_moveset, 
-    max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed, 
-    knocked_out=False):
+    max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed):
         self.name = name
         self.type = type_
         self.level = level
@@ -137,7 +136,7 @@ class Pokemon:
         
         # Add to this list: {effect: numofturns}
         self.status_effects = {}
-        self.knocked_out = knocked_out
+        self.knocked_out = False
 
     def health(self):
         # Print current_health
@@ -182,6 +181,7 @@ class Pokemon:
         print(f'{self.name} has been max revived and now has {self.current_health}/{self.max_health} health.')
 
     def attack(self, other_pokemon):
+        print(f'\n{other_pokemon.name} has been targeted by {self.name}.\n')
         # Let user pick a move
         while True:
             print('Pick a move: \n')
@@ -191,26 +191,36 @@ class Pokemon:
                 print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
 
             try:
-                # Move is an instance of Moves class
-                move = self.moveset[int(input())][0]
-                break
+                # move is an instance of Moves class
+                # Ensure user's choice is in the moveset
+                while True:
+                    choice = int(input())
+                    if choice not in self.moveset:
+                        print('Please pick a valid move: \n')
+                        for move in range(1,5):
+                            print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
+                        continue
+                    move = self.moveset[choice][0]
+                    break
             except ValueError:
-                print('Please pick a valid move.')
+                print('Please pick a valid move: \n')
                 continue
+            break
 
         print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
 
+        # Whether or not the move hits based on accuracy
         if random.randrange(100) > move.accuracy:
             time.sleep(1)
             print(f'{self.name} missed!')
             return
 
-        time.sleep(1)
         # Calculate modifiers:
-        effectiveness = types[move.type[other_pokemon.type]]
+        effectiveness = types[move.type.title()][other_pokemon.type.title()]
         random_factor = random.randint(85, 100) * .01
         if random.randrange(10000) < 625:
             crit = 2
+            time.sleep(1)
             print('It was a critical hit!')
         else:
             crit = 1
@@ -235,16 +245,19 @@ class Pokemon:
         damage = round((level_calc * power * a_d / 50 + 2) * modifier)
 
         # Time for attack to take place
-        time.sleep(1)
         if effectiveness == 2:
+            time.sleep(1)
             print('It was super effective!')
         elif effectiveness == .5:
+            time.sleep(1)
             print('It was not very effective.')
         elif effectiveness == 0:
+            time.sleep(1)
             print('It was not effective...')
 
         time.sleep(1)
         other_pokemon.lose_health(damage)
+        time.sleep(1)
 
 pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
 
@@ -253,3 +266,7 @@ charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 5
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
 
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
+
+while True:
+    pikachu.attack(squirtle)
+    squirtle.attack(pikachu)
