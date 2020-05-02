@@ -247,8 +247,66 @@ class Pokemon:
         other_pokemon.lose_health(damage)
         time.sleep(1)
 
+    def other_trainer_damage(self, other_pokemon, random_move):
+        # Input a random move from computer
+        move = move = self.moveset[random_move][0]
+        
+        # Whether or not the move hits based on accuracy
+        if random.randrange(100) > move.accuracy:
+            time.sleep(1)
+            print(f'{self.name} missed!')
+            return
+
+        # Calculate modifiers:
+        effectiveness = types[move.type.title()][other_pokemon.type.title()]
+        random_factor = random.randint(85, 100) * .01
+        if random.randrange(10000) < 625:
+            crit = 2
+            time.sleep(1)
+            print('It was a critical hit!')
+        else:
+            crit = 1
+        modifier = effectiveness * crit * random_factor
+
+        # Calculate base damage from levels, move power, attack stats and defence stats:
+        level_calc = self.level * 2/5 + 2
+
+        # Physical, special, or status depends of move
+        # Consider status category when it is implemented
+        if move.category == 'physical':
+            a_d = self.attack_stat / other_pokemon.defence_stat
+        elif move.category == 'special':
+            a_d = self.special_attack_stat / other_pokemon.special_defence_stat
+        elif move.category == 'status':
+            pass
+
+        # Power changes depending on move
+        power = move.power
+
+        # Bring base damage and modifiers together with this formula (round to whole number):
+        damage = round((level_calc * power * a_d / 50 + 2) * modifier)
+
+        # Time for attack to take place
+        if effectiveness == 2:
+            time.sleep(1)
+            print('It was super effective!')
+        elif effectiveness == .5:
+            time.sleep(1)
+            print('It was not very effective.')
+        elif effectiveness == 0:
+            time.sleep(1)
+            print('It was not effective...')
+
+        time.sleep(1)
+        other_pokemon.lose_health(damage)
+        time.sleep(1)
+
+    def other_trainer_attack(self, other_pokemon):
+        random_move = random.randint(1,4)
+        self.other_trainer_damage(other_pokemon, random_move)
+
 class Trainer:
-    def __init__(self, pokemon, inventory, currently_active=0):
+    def __init__(self, pokemon, currently_active=0):
         # List of pokemon, up to six
         self.pokemon = pokemon[0:6]
         # Dictionary of items
@@ -258,8 +316,46 @@ class Trainer:
             'Revives': 0, 
             'Max Revives': 0 
         }
-        # currently active pokemon
+        # currently active pokemon, represented by index in self.pokemon
         self.currently_active = currently_active
+    
+    def attack(self, other_trainer):
+        # Two trainers attack eachother
+        self.pokemon[self.currently_active].attack(other_trainer.pokemon[other_trainer.currently_active])
+        # Some sort of status effect check here
+        other_trainer.pokemon[other_trainer.currently_active].other_trainer_attack(self.pokemon[self.currently_active])
+    
+    def potion(self, pokemon):
+        if self.inventory['Potions'] > 0:
+            print(f'A potion has been used on {pokemon.name}.')
+            pokemon.gain_health(pokemon.max_health / 2)
+            self.inventory['Potions'] - 1
+        else:
+            print('There are no Potions left...')
+    def max_potion(self, pokemon):
+        if self.inventory['Max Potions'] > 0:
+            print(f'A max potion has been used on {pokemon.name}.')
+            pokemon.gain_health(pokemon.max_health)
+            self.inventory['Max Potions'] - 1
+        else:
+            print('There are no Max Potions left...')
+    def revive(self, pokemon):
+        if self.inventory['Revives'] > 0:
+            print(f'A revive has been used on {pokemon.name}.')
+            pokemon.revive()
+            self.inventory['Revives'] - 1
+        else:
+            print('There are no Revives left...')
+    def max_revive(self, pokemon):
+        if self.inventory['Max Potions'] > 0:
+            print(f'A Max Revive has been used on {pokemon.name}.')
+            pokemon.max_revive()
+            self.inventory['Max Revives'] - 1
+        else:
+            print('There are no Max Revives left...')
+
+    def add_potions(self, amount):
+        pass
 
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
 leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
@@ -278,6 +374,7 @@ charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 5
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
 
-# while True:
-#     pikachu.attack(squirtle)
-#     squirtle.attack(pikachu)
+ash = Trainer([pikachu, charmander], 0)
+misty = Trainer([bulbasaur, squirtle], 1)
+# 'Mistys squirtle has been targeted by ashs pikachu...' code that in
+ash.attack(misty)
