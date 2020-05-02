@@ -200,7 +200,7 @@ class Pokemon:
 
         print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
 
-        if randrange(100) > move.accuracy:
+        if random.randrange(100) > move.accuracy:
             time.sleep(1)
             print(f'{self.name} missed!')
             return
@@ -247,6 +247,9 @@ class Pokemon:
         other_pokemon.lose_health(damage)
 
 pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
+
 charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
+
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
+
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
