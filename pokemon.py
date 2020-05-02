@@ -1,5 +1,6 @@
 # Become a Pokemon Master! Participate in Pokemon battles.
 import random
+import time
 
 types = {
     'Normal': {
@@ -184,11 +185,13 @@ class Pokemon:
                 print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
 
             try:
+                # Move is an instance of Moves class
                 move = self.moveset[int(input())][0]
                 break
             except ValueError:
                 print('Please pick a valid move.')
                 continue
+
         # Calculate modifiers:
         effectiveness = types[move.type[other_pokemon.type]]
         random_factor = random.randint(85, 100) * .01
@@ -201,22 +204,26 @@ class Pokemon:
 
         # Calculate base damage from levels, move power, attack stats and defence stats:
         level_calc = self.level * 2/5 + 2
-        # Physical or special depends of move
-        # Use if statements to check type of move
-        # Consider effect category
 
+        # Physical, special, or status depends of move
+        # Consider status category when it is implemented
+        if move.category == 'physical':
+            a_d = self.attack_stat / other_pokemon.defence_stat
+        elif move.category == 'special':
+            a_d = self.special_attack_stat / other_pokemon.special_defence_stat
+        elif move.category == 'status':
+            pass
 
-        a_d = self.attack_stat / other_pokemon.defence_stat
-        # s_a_s_d = self.special_attack_stat / other_pokemon.special_defence_stat
         # Power changes depending on move
-        power = 40
+        power = move.power
 
-        # Bring base damage and modifiers together with this formula:
-        # (round to whole number)
-        damage = (level_calc * power * a_d / 50 + 2) * modifier
+        # Bring base damage and modifiers together with this formula (round to whole number):
+        damage = round((level_calc * power * a_d / 50 + 2) * modifier)
 
-        print(f'{self.name} has attacked {other_pokemon.name}!')
+        print(f'{self.name} has attacked {other_pokemon.name} using {move.name}!')
 
+        # Time for attack to take place
+        time.sleep(1)
         if effectiveness == 2:
             print('It was super effective!')
         elif effectiveness == .5:
@@ -224,4 +231,5 @@ class Pokemon:
         elif effectiveness == 0:
             print('It was not effective...')
 
+        time.sleep(1)
         other_pokemon.lose_health(damage)
