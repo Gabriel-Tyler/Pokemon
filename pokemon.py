@@ -96,18 +96,6 @@ class Moves:
         # Requires effect to be passed with status_effect
         self.status_effect = status_effect
 
-tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
-leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
-cut = Moves('Cut', 'normal', 'physical', 50, 95, 30)
-ember = Moves('Ember', 'fire', 'special', 40, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
-hydro_pump = Moves('Hydro Pump', 'water', 'special', 110, 80, 5)
-thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May paralyze opponent.')
-swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
-vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
-razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
-water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
-rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
-
 class Pokemon:
     def __init__(self, name, type_, level, given_moveset, 
     max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed):
@@ -259,14 +247,37 @@ class Pokemon:
         other_pokemon.lose_health(damage)
         time.sleep(1)
 
+class Trainer:
+    def __init__(self, pokemon, inventory, currently_active=0):
+        # List of pokemon, up to six
+        self.pokemon = pokemon[0:6]
+        # Dictionary of items
+        self.inventory = {
+            'Potions': 0, 
+            'Max Potion': 0, 
+            'Revives': 0, 
+            'Max Revives': 0 
+        }
+        # currently active pokemon
+        self.currently_active = currently_active
+
+tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
+leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
+cut = Moves('Cut', 'normal', 'physical', 50, 95, 30)
+ember = Moves('Ember', 'fire', 'special', 40, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
+hydro_pump = Moves('Hydro Pump', 'water', 'special', 110, 80, 5)
+thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May paralyze opponent.')
+swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
+vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
+razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
+water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
+rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
+
 pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
-
 charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
-
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
-
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
 
-while True:
-    pikachu.attack(squirtle)
-    squirtle.attack(pikachu)
+# while True:
+#     pikachu.attack(squirtle)
+#     squirtle.attack(pikachu)
