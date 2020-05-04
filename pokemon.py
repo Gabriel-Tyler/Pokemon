@@ -98,7 +98,7 @@ class Moves:
 
 class Pokemon:
     def __init__(self, name, type_, level, given_moveset, 
-    max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed):
+    max_health, attack_stat, defence_stat, special_attack_stat, special_defence_stat, speed_stat):
         self.name = name
         self.type = type_
         self.level = level
@@ -114,13 +114,22 @@ class Pokemon:
         # Ex: self.moveset = {1: [tackle, 25], 2: [leer, 40], ...}
         # self.moveset[1[0]].power ........
 
+        # Base stats, don't change
+        self.base_max_health = max_health
+        self.base_attack_stat = attack_stat
+        self.base_defence_stat = defence_stat
+        self.base_special_attack_stat = special_attack_stat
+        self.base_special_defence_stat = special_defence_stat
+        self.base_speed_stat = speed_stat
+
+        # Current stats, change when leveling
         self.max_health = max_health
         self.current_health = max_health
         self.attack_stat = attack_stat
         self.defence_stat = defence_stat
         self.special_attack_stat = special_attack_stat
         self.special_defence_stat = special_defence_stat
-        self.speed = speed
+        self.speed_stat = speed_stat
         
         # Add to this list: {effect: numofturns}
         self.status_effects = {}
@@ -165,10 +174,10 @@ class Pokemon:
         print(f'{self.name} has been max revived and now has {self.current_health}/{self.max_health} health.')
 
     def attack(self, other_pokemon):
-        print(f'\n{other_pokemon.name} has been targeted by {self.name}.\n')
+        print(f'{other_pokemon.name} has been targeted by {self.name}.\n')
         # Let user pick a move
         while True:
-            print('Pick a move: \n')
+            print('Pick a move: ')
             # moveset = {i: [move, move.pp], ...}
             for move in self.moveset:
                 # Add power and accuracy to options
@@ -302,6 +311,16 @@ class Pokemon:
         random_move = random.randint(1,len(self.moveset))
         self.other_trainer_damage(other_pokemon, random_move)
 
+    def level_up(self):
+        # When leveling up, current stats are increased by 1/50 of base stats
+        self.max_health += round((1/50) * self.base_max_health)
+        self.current_health = self.max_health
+        self.attack_stat += round((1/50) * self.base_attack_stat)
+        self.defence_stat += round((1/50) * self.base_defence_stat)
+        self.special_attack_stat += round((1/50) * self.base_special_attack_stat)
+        self.special_defence_stat += round((1/50) * self.base_special_defence_stat)
+        self.speed_stat += round((1/50) * self.base_speed_stat)
+
 class Trainer:
     def __init__(self, name, pokemon, currently_active=0):
         self.name = name
@@ -318,16 +337,53 @@ class Trainer:
         self.currently_active = currently_active
     
     def attack(self, other_trainer):
-        # Pokemon should level up after this method, changing level and all stats by a certain percent
+        def attack_other(trainer_1, trainer_2):
+            trainer_1.pokemon[trainer_1.currently_active].attack(trainer_2.pokemon[trainer_2.currently_active])
+        def check_knockout(trainer, i):
+            while i < len(trainer.pokemon):
+                if not trainer.pokemon[i].knocked_out:
+                    trainer.currently_active = i
+                    break
+                i += 1  
         # Two trainers attack eachother
-        # Implement speed
-        # Check if pokemon is fainted, if all are fainted, the trainer blacks out and the game ends
-        self.pokemon[self.currently_active].attack(other_trainer.pokemon[other_trainer.currently_active])
-        # Check if a pokemon had fainted, force a switch if so, or black out
-        # Some sort of status effect check here
-        other_trainer.pokemon[other_trainer.currently_active].other_trainer_attack(self.pokemon[self.currently_active])
-        # Faint check
+        # Level ups occur mid battle
+        # Some sort of status effect check between the battles
+        if self.pokemon[self.currently_active].speed_stat >= other_trainer.pokemon[other_trainer.currently_active].speed_stat:
+            attack_other(self, other_trainer)
+            if other_trainer.pokemon[other_trainer.currently_active].knocked_out:
+                self.pokemon[self.currently_active].level_up()
+                i = 0
+                check_knockout(other_trainer, i)
+                if i == len(other_trainer.pokemon):
+                    print(f'{other_trainer.name}\'s pokemon have all fainted...{other_trainer.name} blacks out.')
+                    return
 
+            attack_other(other_trainer, self)
+            if self.pokemon[self.currently_active].knocked_out:
+                other_trainer.pokemon[other_trainer.currently_active].level_up()
+                i = 0
+                check_knockout(self, i)
+                if i == len(self.pokemon):
+                    print(f'{self.name}\'s pokemon have all fainted...{self.name} blacks out.')
+                    return
+        else:
+            attack_other(other_trainer, self)
+            if self.pokemon[self.currently_active].knocked_out:
+                other_trainer.pokemon[other_trainer.currently_active].level_up()
+                i = 0
+                check_knockout(self, i)
+                if i == len(self.pokemon):
+                    print(f'{self.name}\'s pokemon have all fainted...{self.name} blacks out.')
+                    return
+            attack_other(self, other_trainer)
+            if other_trainer.pokemon[other_trainer.currently_active].knocked_out:
+                self.pokemon[self.currently_active].level_up()
+                i = 0
+                check_knockout(other_trainer, i)
+                if i == len(other_trainer.pokemon):
+                    print(f'{other_trainer.name}\'s pokemon have all fainted...{other_trainer.name} blacks out.')
+                    return
+        
     # Print each pokemon's health and whether they are fainted
     # Allow a choice of which pokemon to heal/revive
     # Only revive if fainted
@@ -370,9 +426,8 @@ class Trainer:
     def add_max_revive(self, amount=1):
         self.inventory['Max Revives'] += amount
 
-    def switch_pokemon(self, pokemon):
-        pass
-    def next_pokemon(self):
+    def switch_pokemon(self, pokemon_index):
+        # print which pokemon with a list of pokemon and their index, index is input
         pass
 
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
@@ -386,8 +441,8 @@ vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
 razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
 water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
 rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
-# [tackle, cut, thunderbolt, swift]
-pikachu = Pokemon('Pikachu', 'electric', 1, [thunderbolt], 35, 55, 30, 50, 40, 90)
+
+pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
 charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
@@ -395,7 +450,6 @@ squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro
 ash = Trainer('Ash', [pikachu, charmander], 0)
 misty = Trainer('Misty', [bulbasaur, squirtle], 1)
 # 'Mistys squirtle has been targeted by ashs pikachu...' code that in
-# Print other pokemon's move
 while True:
     misty.attack(ash)
 
