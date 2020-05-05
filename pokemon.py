@@ -174,10 +174,9 @@ class Pokemon:
         print(f'{self.name} has been max revived and now has {self.current_health}/{self.max_health} health.')
 
     def attack(self, other_pokemon):
-        # print(f'{other_pokemon.name} has been targeted by {self.name}.\n')
         # Let user pick a move
+        print('Pick a move: ')
         while True:
-            print('Pick a move: ')
             # moveset = {i: [move, move.pp], ...}
             for move in self.moveset:
                 # Add power and accuracy to options
@@ -186,15 +185,12 @@ class Pokemon:
             try:
                 # move is an instance of Moves class
                 # Ensure user's choice is in the moveset
-                while True:
-                    choice = int(input())
-                    if choice not in self.moveset:
-                        print('Please pick a valid move: \n')
-                        for move in range(1, len(self.moveset)):
-                            print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
-                        continue
-                    move = self.moveset[choice][0]
-                    break
+                choice = int(input())
+                if choice not in self.moveset:
+                    print('Please pick a valid move: \n')
+                    continue
+                move = self.moveset[choice][0]
+                break
             except ValueError:
                 print('Please pick a valid move: \n')
                 continue
@@ -293,7 +289,7 @@ class Pokemon:
         # Bring base damage and modifiers together with this formula (round to whole number):
         damage = round((level_calc * power * a_d / 50 + 2) * modifier)
 
-        # Time for attack to take place
+        # Effectiveness of the move
         if effectiveness == 2:
             time.sleep(1)
             print('It was super effective!')
@@ -304,6 +300,7 @@ class Pokemon:
             time.sleep(1)
             print('It was not effective...')
 
+        # Natural breathing time for the text
         time.sleep(1)
         other_pokemon.lose_health(damage)
         time.sleep(1)
@@ -313,6 +310,8 @@ class Pokemon:
 
     def level_up(self):
         # When leveling up, current stats are increased by 1/50 of base stats
+        # Print that the pokemon has leveled up
+        # What level it is now and what the stats changed to
         self.max_health += round((1/50) * self.base_max_health)
         self.current_health = self.max_health
         self.attack_stat += round((1/50) * self.base_attack_stat)
@@ -434,16 +433,32 @@ class Trainer:
     def add_max_revive(self, amount=1):
         self.inventory['Max Revives'] += amount
 
-    def switch_pokemon(self, pokemon_index):
+    def switch_pokemon(self):
         # print which pokemon with a list of pokemon and their index, index is input
+        # Add each pokemon's health when selecting, also any status effects if any
         print('Choose which pokemon to switch to: ')
-        for i in range(len(self.pokemon)):
-            if i == self.currently_active:
+        while True:
+            # available_pokemon list contains indices of pokemon that are not knocked out or currently active
+            # Change to where all pokemon are listed, fainted and active are labelled as such
+            available_pokemon = []
+            for i in range(len(self.pokemon)):
+                if not (i == self.currently_active) or (self.pokemon[i].knocked_out):
+                    available_pokemon.append(i)
+                print(f'[{i}] {self.pokemon[i].name}: {self.pokemon[i].current_health}/{self.pokemon[i].max_health}')
+
+            # Take user input on which pokemon to choose
+            try:
+                choice = int(input())
+                if choice not in available_pokemon:
+                    print('Please pick an available pokemon: ')
+                    continue
+                self.currently_active = i
+                break
+
+            except ValueError:
+                print('Please pick an available pokemon: ')
                 continue
-            if self.pokemon[i].knocked_out:
-                continue
-            print(f'[{i}] {self.pokemon[i].name}')
-        # choice = input()
+            break
 
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
 leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
@@ -464,10 +479,21 @@ squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro
 
 ash = Trainer('Ash', [pikachu, charmander], 0)
 misty = Trainer('Misty', [bulbasaur, squirtle], 1)
-# 'Mistys squirtle has been targeted by ashs pikachu...' code that in later
-# Make other trainers moves automatic
-# use other_trainer_attack in attack method in Trainer class
+
 print()
 battle = False
 while not battle:
     battle = ash.attack(misty)
+
+'''
+To do:
+    Level up texts
+    Item usage
+    Status effects class
+    Switch pokemon
+    Improve change pokemon method
+    User class to give user option on who to battle, use items, switch pokemon, etc.
+    Make a tournament ladder?
+    Implement PP and what to do if moves are out
+    What if all moves are out?
+'''
