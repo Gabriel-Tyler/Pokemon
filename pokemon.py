@@ -174,7 +174,7 @@ class Pokemon:
         print(f'{self.name} has been max revived and now has {self.current_health}/{self.max_health} health.')
 
     def attack(self, other_pokemon):
-        print(f'{other_pokemon.name} has been targeted by {self.name}.\n')
+        # print(f'{other_pokemon.name} has been targeted by {self.name}.\n')
         # Let user pick a move
         while True:
             print('Pick a move: ')
@@ -190,7 +190,7 @@ class Pokemon:
                     choice = int(input())
                     if choice not in self.moveset:
                         print('Please pick a valid move: \n')
-                        for move in range(1,5):
+                        for move in range(1, len(self.moveset)):
                             print(f'[{move}] {self.moveset[move][0].name}: {self.moveset[move][1]} PP', f': {self.moveset[move][0].effect}')
                         continue
                     move = self.moveset[choice][0]
@@ -324,7 +324,8 @@ class Pokemon:
 class Trainer:
     def __init__(self, name, pokemon, currently_active=0):
         self.name = name
-        # List of pokemon, up to six
+        # List of Pokemon objects, up to six:
+        # [pikachu, squirtle, charmander, ..., ..., ...]
         self.pokemon = pokemon[0:6]
         # Dictionary of items
         self.inventory = {
@@ -339,51 +340,58 @@ class Trainer:
     def attack(self, other_trainer):
         def attack_other(trainer_1, trainer_2):
             trainer_1.pokemon[trainer_1.currently_active].attack(trainer_2.pokemon[trainer_2.currently_active])
-        def check_knockout(trainer, i):
-            while i < len(trainer.pokemon):
-                if not trainer.pokemon[i].knocked_out:
-                    trainer.currently_active = i
-                    break
-                i += 1  
+        def other_trainer_attack(trainer_1, trainer_2):
+            trainer_1.pokemon[trainer_1.currently_active].other_trainer_attack(trainer_2.pokemon[trainer_2.currently_active])
+        def target_message(trainer_1, trainer_2):
+            print(f'{trainer_1.name}\'s {trainer_1.pokemon[trainer_1.currently_active].name} has targeted {trainer_2.name}\'s {trainer_2.pokemon[trainer_2.currently_active].name}!\n')
+            time.sleep(1)
+
+        def check_speed(trainer_1, trainer_2):
+            return trainer_1.pokemon[trainer_1.currently_active].speed_stat >= trainer_2.pokemon[trainer_2.currently_active].speed_stat
+        def check_knockout(trainer_1, trainer_2):
+            # Check if trainer_1's knocked out trainer_2's
+            # If so, level up trainer_1's currently active pokemon
+            if trainer_2.pokemon[trainer_2.currently_active].knocked_out:
+                trainer_1.pokemon[trainer_1.currently_active].level_up()
+            else:
+                return
+            
+            # Return False if there is at least one pokemon not fainted
+            # Return True if all pokemon are fainted
+            for i in range(len(trainer_2.pokemon)):
+                if not trainer_2.pokemon[i].knocked_out:
+                    trainer_2.currently_active = i
+                    return False
+
+            # Code past the for loop are for when all pokemon have fainted
+            print(f'{trainer_2.name}\'s pokemon have all fainted... {trainer_2.name} blacks out.')
+            return True
+            
         # Two trainers attack eachother
         # Level ups occur mid battle
-        # Some sort of status effect check between the battles
-        if self.pokemon[self.currently_active].speed_stat >= other_trainer.pokemon[other_trainer.currently_active].speed_stat:
+        # Implement some sort of status effect check between the battles
+        if check_speed(self, other_trainer):
+            target_message(self, other_trainer)
             attack_other(self, other_trainer)
-            if other_trainer.pokemon[other_trainer.currently_active].knocked_out:
-                self.pokemon[self.currently_active].level_up()
-                i = 0
-                check_knockout(other_trainer, i)
-                if i == len(other_trainer.pokemon):
-                    print(f'{other_trainer.name}\'s pokemon have all fainted...{other_trainer.name} blacks out.')
-                    return
+            if check_knockout(self, other_trainer):
+                return True
 
-            attack_other(other_trainer, self)
-            if self.pokemon[self.currently_active].knocked_out:
-                other_trainer.pokemon[other_trainer.currently_active].level_up()
-                i = 0
-                check_knockout(self, i)
-                if i == len(self.pokemon):
-                    print(f'{self.name}\'s pokemon have all fainted...{self.name} blacks out.')
-                    return
+            target_message(other_trainer, self)
+            other_trainer_attack(other_trainer, self)
+            if check_knockout(other_trainer, self):
+                return True
+            return False
         else:
-            attack_other(other_trainer, self)
-            if self.pokemon[self.currently_active].knocked_out:
-                other_trainer.pokemon[other_trainer.currently_active].level_up()
-                i = 0
-                check_knockout(self, i)
-                if i == len(self.pokemon):
-                    print(f'{self.name}\'s pokemon have all fainted...{self.name} blacks out.')
-                    return
+            target_message(other_trainer, self)
+            other_trainer_attack(other_trainer, self)
+            if check_knockout(other_trainer, self):
+                return True
+
+            target_message(self, other_trainer)
             attack_other(self, other_trainer)
-            if other_trainer.pokemon[other_trainer.currently_active].knocked_out:
-                self.pokemon[self.currently_active].level_up()
-                i = 0
-                check_knockout(other_trainer, i)
-                if i == len(other_trainer.pokemon):
-                    print(f'{other_trainer.name}\'s pokemon have all fainted...{other_trainer.name} blacks out.')
-                    return
-        
+            if check_knockout(self, other_trainer):
+                return True
+            return False
     # Print each pokemon's health and whether they are fainted
     # Allow a choice of which pokemon to heal/revive
     # Only revive if fainted
@@ -428,7 +436,14 @@ class Trainer:
 
     def switch_pokemon(self, pokemon_index):
         # print which pokemon with a list of pokemon and their index, index is input
-        pass
+        print('Choose which pokemon to switch to: ')
+        for i in range(len(self.pokemon)):
+            if i == self.currently_active:
+                continue
+            if self.pokemon[i].knocked_out:
+                continue
+            print(f'[{i}] {self.pokemon[i].name}')
+        # choice = input()
 
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
 leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
@@ -442,16 +457,17 @@ razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
 water_gun = Moves('Water Gun', 'Water', 'special', 40, 100, 25)
 rapid_spin = Moves('Rapid Spin', 'Normal', 'physical', 50, 100, 40)
 
-pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, swift], 35, 55, 30, 50, 40, 90)
+pikachu = Pokemon('Pikachu', 'electric', 1, [tackle, cut, thunderbolt, ember], 35, 55, 30, 50, 40, 90)
 charmander = Pokemon('Charmander', 'fire', 1, [tackle, cut, ember, swift], 39, 52, 43, 60, 50, 65)
 bulbasaur = Pokemon('Bulbasaur', 'grass', 1, [tackle, cut, vinewhip, razor_leaf], 45, 49, 59, 65, 65, 45)
 squirtle = Pokemon('Squirtle', 'water', 1, [tackle, water_gun, rapid_spin, hydro_pump], 44, 48, 65, 50, 74, 43)
 
 ash = Trainer('Ash', [pikachu, charmander], 0)
 misty = Trainer('Misty', [bulbasaur, squirtle], 1)
-# 'Mistys squirtle has been targeted by ashs pikachu...' code that in
-while True:
-    misty.attack(ash)
-
-
-
+# 'Mistys squirtle has been targeted by ashs pikachu...' code that in later
+# Make other trainers moves automatic
+# use other_trainer_attack in attack method in Trainer class
+print()
+battle = False
+while not battle:
+    battle = ash.attack(misty)
