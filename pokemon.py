@@ -353,19 +353,21 @@ class Trainer:
             if trainer_2.pokemon[trainer_2.currently_active].knocked_out:
                 trainer_1.pokemon[trainer_1.currently_active].level_up()
             else:
-                return
+                return False
             
             # Return False if there is at least one pokemon not fainted
             # Return True if all pokemon are fainted
             for i in range(len(trainer_2.pokemon)):
                 if not trainer_2.pokemon[i].knocked_out:
                     trainer_2.currently_active = i
+                    print(f'\n{trainer_2.name} has switched to {trainer_2.pokemon[i].name}.\n')
+                    time.sleep(1)
                     return False
 
             # Code past the for loop are for when all pokemon have fainted
-            print(f'{trainer_2.name}\'s pokemon have all fainted... {trainer_2.name} blacks out.')
+            print(f'\n{trainer_2.name}\'s pokemon have all fainted... they black out!')
+            time.sleep(1)
             return True
-            
         # Two trainers attack eachother
         # Level ups occur mid battle
         # Implement some sort of status effect check between the battles
@@ -434,12 +436,10 @@ class Trainer:
         self.inventory['Max Revives'] += amount
 
     def switch_pokemon(self):
-        # print which pokemon with a list of pokemon and their index, index is input
-        # Add each pokemon's health when selecting, also any status effects if any
+        # print which pokemon with a list of pokemon and their index, index as an input
         print('Choose which pokemon to switch to: ')
         while True:
             # available_pokemon list contains indices of pokemon that are not knocked out or currently active
-            # Change to where all pokemon are listed, fainted and active are labelled as such
             available_pokemon = []
             for i in range(len(self.pokemon)):
                 if not (i == self.currently_active) or (self.pokemon[i].knocked_out):
@@ -463,9 +463,9 @@ class Trainer:
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
 leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
 cut = Moves('Cut', 'normal', 'physical', 50, 95, 30)
-ember = Moves('Ember', 'fire', 'special', 40, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
+ember = Moves('Ember', 'fire', 'special', 4000, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
 hydro_pump = Moves('Hydro Pump', 'water', 'special', 110, 80, 5)
-thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May paralyze opponent.')
+thunderbolt = Moves('Thunderbolt', 'electric', 'special', 9000, 100, 15, 'May paralyze opponent.')
 swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
 vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
 razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
@@ -487,6 +487,7 @@ while not battle:
 
 '''
 To do:
+    When a pokemon is knocked out, show message that trainer switched to different pokemon
     Level up texts
     Item usage
     Status effects class
