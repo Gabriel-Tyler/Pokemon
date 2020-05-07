@@ -393,6 +393,10 @@ class Trainer:
             if check_knockout(self, other_trainer):
                 return True
             return False
+    
+    def list_pokemon(self):
+        for i in range(len(self.pokemon)):
+            print(f'[{i}] {self.pokemon[i].name}: {self.pokemon[i].current_health}/{self.pokemon[i].max_health}')
     # Print each pokemon's health and whether they are fainted
     # Allow a choice of which pokemon to heal/revive
     # Only revive if fainted
@@ -463,9 +467,9 @@ class Trainer:
 tackle = Moves('Tackle', 'normal', 'physical', 40, 100, 35)
 leer = Moves('Leer', 'normal', 'status', 0, 100, 30, 'Lowers opponent\'s Defense.') # Add lower defence effect
 cut = Moves('Cut', 'normal', 'physical', 50, 95, 30)
-ember = Moves('Ember', 'fire', 'special', 4000, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
+ember = Moves('Ember', 'fire', 'special', 40, 100, 25, 'May burn opponent.') # Add chance to burn [effect, turns, chance]
 hydro_pump = Moves('Hydro Pump', 'water', 'special', 110, 80, 5)
-thunderbolt = Moves('Thunderbolt', 'electric', 'special', 9000, 100, 15, 'May paralyze opponent.')
+thunderbolt = Moves('Thunderbolt', 'electric', 'special', 90, 100, 15, 'May paralyze opponent.')
 swift = Moves('Swift', 'normal', 'special', 60, 100, 20)
 vinewhip = Moves('Vinewhip', 'grass', 'physical', 45, 100, 25)
 razor_leaf = Moves('Razor Leaf', 'grass', 'physical', 55, 95, 25)
@@ -487,12 +491,10 @@ while not battle:
 
 '''
 To do:
-    When a pokemon is knocked out, show message that trainer switched to different pokemon
+    Make there be two attack methods so that one is two player and other against cp
     Level up texts
     Item usage
     Status effects class
-    Switch pokemon
-    Improve change pokemon method
     User class to give user option on who to battle, use items, switch pokemon, etc.
     Make a tournament ladder?
     Implement PP and what to do if moves are out
